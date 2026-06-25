@@ -1,0 +1,210 @@
+name: Generate SEO Pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate all pages
+        run: |
+          python3 << 'PYEOF'
+          import os, json
+
+          DOMAIN = "seo.yarkidom.ru"
+          PHONE = "+7 (929) 998-06-06"
+          PHONE_CLEAN = "+79299980606"
+
+          CATEGORIES = [
+              ("steny","покраска стен","стен"),
+              ("potolki","покраска потолков","потолков"),
+              ("fasady","покраска фасадов","фасадов"),
+              ("kryshi","покраска крыш","крыш"),
+              ("derevyannye-doma","покраска деревянных домов","деревянных домов"),
+          ]
+
+          LARGE = [
+              ("balashiha","Балашиха","25–30 мин",["Железнодорожный","Кучино","Никольско-Архангельский","Саввино"]),
+              ("podolsk","Подольск","40–50 мин",["Центр","Климовск","Щербинка","Кузнечики"]),
+              ("mytishchi","Мытищи","25–35 мин",["Центр","Перловская","Тайнинская","Челобитьево"]),
+              ("lubertsy","Люберцы","30–40 мин",["Центр","Томилино","Малаховка","Красково"]),
+              ("korolev","Королёв","30–35 мин",["Центр","Болшево","Юбилейный","Бабушкино"]),
+              ("krasnogorsk","Красногорск","25–30 мин",["Центр","Опалиха","Нахабино","Павшинская Пойма"]),
+              ("odintsovo","Одинцово","35–45 мин",["Центр","Баковка","Жаворонки","Голицыно"]),
+              ("domodedovo","Домодедово","50–60 мин",["Центр","Барыбино","Белые Столбы","Востряково"]),
+              ("serpukhov","Серпухов","60–80 мин",["Центр","Данки","Большевик","Липицы"]),
+              ("kolomna","Коломна","70–90 мин",["Центр","Голутвин","Щурово","Хорошово"]),
+              ("ramenskoe","Раменское","40–50 мин",["Центр","Жуково","Быково","Удельная"]),
+              ("dolgoprudny","Долгопрудный","20–25 мин",["Центр","Шереметьевский","Хлебниково"]),
+              ("reutov","Реутов","20–25 мин",["Центр","Новокосино"]),
+              ("pushkino","Пушкино","30–40 мин",["Центр","Мамонтовка","Правда","Заветы Ильича"]),
+              ("zhukovskiy","Жуковский","40–50 мин",["Центр","Быково","Удельная"]),
+              ("orekhovo-zuevo","Орехово-Зуево","60–80 мин",["Центр","Ликино-Дулёво","Дрезна"]),
+              ("noginsk","Ногинск","50–60 мин",["Центр","Электросталь","Старая Купавна"]),
+              ("vidnoe","Видное","35–45 мин",["Центр","Расторгуево","Белокаменная"]),
+              ("ivanteevka","Ивантеевка","30–40 мин",["Центр","Детская","Фрязево"]),
+              ("lobnya","Лобня","20–25 мин",["Центр","Красная Поляна","Катюшки"]),
+              ("himki","Химки","15–20 мин",["Центр","Планерная","Левобережный","Сходня"]),
+              ("shchelkovo","Щёлково","30–40 мин",["Центр","Фрязево","Монино","Чкаловский"]),
+          ]
+
+          MEDIUM = [
+              ("dubna","Дубна","70–90 мин"),("egorevsk","Егорьевск","70–90 мин"),
+              ("lytkarino","Лыткарино","35–45 мин"),("pavlovskiy-posad","Павловский Посад","55–65 мин"),
+              ("dmitrov","Дмитров","50–60 мин"),("stupino","Ступино","60–80 мин"),
+              ("kotelniki","Котельники","30–40 мин"),("dzerzhinskiy","Дзержинский","30–40 мин"),
+              ("klin","Клин","60–75 мин"),("chekhov","Чехов","50–65 мин"),
+              ("voskresensk","Воскресенск","55–70 мин"),("naro-fominsk","Наро-Фоминск","50–65 мин"),
+              ("solnechnogorsk","Солнечногорск","40–55 мин"),("fryazino","Фрязино","30–40 мин"),
+              ("elektrostal","Электросталь","50–60 мин"),("aprelevka","Апрелевка","45–55 мин"),
+              ("istra","Истра","40–55 мин"),("zaraysk","Зарайск","90–110 мин"),
+              ("kashira","Кашира","65–80 мин"),("mozhaysk","Можайск","70–90 мин"),
+              ("zvenigorod","Звенигород","45–60 мин"),("kubinka","Кубинка","55–70 мин"),
+              ("lukhovitsy","Луховицы","80–100 мин"),("losino-petrovskiy","Лосино-Петровский","40–50 мин"),
+              ("dedovsk","Дедовск","30–40 мин"),("sergiev-posad","Сергиев Посад","55–70 мин"),
+              ("protvino","Протвино","80–100 мин"),("shatura","Шатура","80–100 мин"),
+              ("staraya-kupavna","Старая Купавна","45–55 мин"),("bronnitsy","Бронницы","45–55 мин"),
+              ("ozyory","Озёры","70–90 мин"),("lyubertsy2","Люберцы (ВК)","35 мин"),
+              ("golitsyno","Голицыно","45–55 мин"),("elektrogorsk","Электрогорск","65–80 мин"),
+          ]
+
+          SMALL = [
+              ("yakhroma-taldom","Яхрома и Талдом","Яхрома, Талдом"),
+              ("ruza-vereya","Руза и Верея","Руза, Верея"),
+              ("pushchino","Пущино и Серпухов","Пущино, Серпухов (район)"),
+              ("krasnozavodsk","Краснозаводск и Пересвет","Краснозаводск, Пересвет"),
+              ("kurovskoe","Куровское и Дрезна","Куровское, Дрезна"),
+              ("elektrogorsk-pp","Электрогорск и Павловский Посад","Электрогорск, Павловский Посад"),
+              ("beloozyorskiy","Белоозёрский и Воскресенск","Белоозёрский, Воскресенск"),
+              ("vysokovsk","Высоковск и Клин","Высоковск, район Клина"),
+          ]
+
+          PRICES = {
+              "steny":[("Покраска стен (1 слой)","от 400 руб/м²"),("Покраска стен (2 слоя + грунт)","от 700 руб/м²"),("Подготовка поверхности","от 200 руб/м²"),("Фасадные стены","от 900 руб/м²")],
+              "potolki":[("Покраска потолка (1 слой)","от 350 руб/м²"),("Покраска потолка (2 слоя)","от 600 руб/м²"),("Шпаклёвка + покраска","от 900 руб/м²"),("Высокие потолки (>3 м)","от 800 руб/м²")],
+              "fasady":[("Покраска фасада (1 слой)","от 500 руб/м²"),("Покраска фасада (2 слоя + грунт)","от 900 руб/м²"),("Огнебиозащита фасада","от 350 руб/м²"),("Сложный рельеф","от 1 200 руб/м²")],
+              "kryshi":[("Покраска крыши (металл)","от 600 руб/м²"),("Покраска крыши (шифер)","от 500 руб/м²"),("Антикоррозийная обработка","от 400 руб/м²"),("Высокие скаты","от 1 000 руб/м²")],
+              "derevyannye-doma":[("Покраска дома (1 слой)","от 500 руб/м²"),("Покраска с шлифовкой (2 слоя)","от 900 руб/м²"),("Огнебиозащита + покраска","от 1 100 руб/м²"),("Бревно (сложная геометрия)","от 1 400 руб/м²")],
+          }
+
+          FAQ = {
+              "steny":[("Как подготовить стены к безвоздушной покраске?","Снимаем старое покрытие, зашпаклёвываем трещины, шлифуем и грунтуем."),("Сколько слоёв краски нужно?","Обычно 2 слоя. При тёмных цветах — 3."),("Можно ли красить при минусе?","Наружные работы только при +5°C и выше."),("Сколько сохнет краска?","Латексные 2–4 часа, алкидные 12–24 часа."),("Чем Airless лучше кисти?","Равномерное покрытие, нет потёков, в 5 раз быстрее.")],
+              "potolki":[("Сколько сохнет краска на потолке?","2–4 часа. При влажности >70% — до 6–8 часов."),("Как избежать разводов?","Airless даёт равномерный факел. Расстояние форсунки 30–40 см."),("Нужно ли шпаклевать?","Если есть трещины — да."),("Можно красить рядом с натяжным потолком?","Да, тщательно маскируем малярным скотчем."),("Какую краску выбрать?","Матовую латексную. Для ванной — влагостойкую.")],
+              "fasady":[("Как долго служит покраска фасада?","7–10 лет при Airless + качественные краски."),("Когда лучше красить фасад?","Май–сентябрь при +8–25°C без дождей."),("Нужна ли грунтовка?","Обязательно. Снижает расход краски на 15–20%."),("Можно красить под дождём?","Нет. Ждём 2–4 часа после дождя."),("Сколько краски на фасад?","150–250 мл/м² за два слоя.")],
+              "kryshi":[("Можно ли красить крышу самостоятельно?","Опасно. Нужна страховка и профоборудование."),("Какую краску для металлической крыши?","Антикоррозийную эмаль Hammerite или Caparol."),("Нужно ли очищать крышу?","Да. Снимаем ржавчину, моем поверхность."),("Сколько сохнет?","Эмали 24–48 часов, акриловые 4–6 часов."),("В какую погоду нельзя красить?","В дождь, ниже +5°C, ветер >5 м/с.")],
+              "derevyannye-doma":[("Как подготовить дом к покраске?","Шлифуем, наносим биозащиту, грунтуем."),("Сколько служит покраска?","7–10 лет с Airless и Tikkurila Valtti."),("Нужна огнебиозащита?","Рекомендуем всегда. Защита от пожара и плесени."),("Можно красить при высокой влажности?","Нет. Влажность дерева не выше 15–18%."),("Лазурь или краска?","Лазурь сохраняет текстуру. Краска закрашивает. Защита одинакова.")],
+          }
+
+          TIPS = {
+              "steny":"<h2>Особенности покраски стен Airless</h2><p>Работаем с бетоном, штукатуркой и гипсокартоном. Перед нанесением: шлифовка, грунтовка, маскировка.</p>",
+              "potolki":"<h2>Особенности покраски потолков Airless</h2><p>Матирующие составы в 2 слоя. Время высыхания 2–4 часа. Устойчивость к влажности.</p>",
+              "fasady":"<h2>Особенности покраски фасадов Airless</h2><p>Airless вдавливает краску в поры — покрытие держится 7–10 лет. Используем Tikkurila Facade и Caparol.</p>",
+              "kryshi":"<h2>Особенности покраски крыш Airless</h2><p>Страховочное оборудование, специальные форсунки для наклонных поверхностей. Антикоррозийные эмали.</p>",
+              "derevyannye-doma":"<h2>Особенности покраски деревянных домов Airless</h2><p>Wagner Cobra 220 бар вдавливает антисептик в структуру древесины. Огнебиозащита СЕНЕЖ или Пирилакс.</p>",
+          }
+
+          CSS = """*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#0d0d0d;color:#e0e0e0;line-height:1.7}.container{max-width:960px;margin:0 auto;padding:20px}a{color:#f0c040}h1{color:#f0c040;font-size:1.8em;margin:20px 0 10px}h2{color:#f0c040;font-size:1.3em;margin:20px 0 8px}h3{color:#ccc;font-size:1.1em;margin:15px 0 5px}p{margin:0 0 12px;color:#bbb}ul{margin:0 0 12px 20px;color:#bbb}.cta{display:inline-block;background:#f0c040;color:#000;padding:14px 28px;font-weight:700;border-radius:6px;text-decoration:none;margin:10px 0}.price-table{width:100%;border-collapse:collapse;margin:15px 0}.price-table th,.price-table td{border:1px solid #333;padding:10px}.price-table th{background:#1a1a1a;color:#f0c040}.price-table td{color:#ccc}.faq-item{border-left:3px solid #f0c040;padding:10px 15px;margin:10px 0;background:#111}form{background:#111;padding:20px;border-radius:8px;margin:20px 0}input{width:100%;padding:10px;margin:8px 0;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:4px;font-size:1em}button[type=submit]{background:#f0c040;color:#000;border:none;padding:12px 24px;font-weight:700;border-radius:6px;cursor:pointer;font-size:1em;margin-top:8px}nav{padding:10px 0;border-bottom:1px solid #222;margin-bottom:20px}"""
+
+          def prices_html(cat):
+              rows=''.join(f'<tr><td>{n}</td><td>{p}</td></tr>' for n,p in PRICES[cat])
+              return f'<table class="price-table"><thead><tr><th>Услуга</th><th>Цена</th></tr></thead><tbody>{rows}</tbody></table>'
+
+          def faq_html(cat):
+              return '<div class="faq">'+''.join(f'<div class="faq-item"><h3>{q}</h3><p>{a}</p></div>' for q,a in FAQ[cat])+'</div>'
+
+          def schemas(cat, cat_gen, city, url):
+              lb={"@context":"https://schema.org","@type":"LocalBusiness","name":"YarkiDom","telephone":PHONE_CLEAN,"url":"https://yarkidom.ru","areaServed":city}
+              svc={"@context":"https://schema.org","@type":"Service","name":f"Безвоздушная покраска {cat_gen} в {city}","provider":{"@type":"LocalBusiness","name":"YarkiDom","telephone":PHONE_CLEAN},"areaServed":city,"url":url}
+              faqp={"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in FAQ[cat]]}
+              steps=["Осмотр и замер площади","Подготовка поверхности (шлифовка, шпаклёвка)","Нанесение грунта","Нанесение 1-го слоя Airless-аппаратом","Сушка и нанесение 2-го слоя","Финальный осмотр"]
+              howto={"@context":"https://schema.org","@type":"HowTo","name":f"Покраска {cat_gen} в {city}","step":[{"@type":"HowToStep","text":s} for s in steps]}
+              return json.dumps([lb,svc,faqp,howto],ensure_ascii=False)
+
+          def make_page(cat, cat_name, cat_gen, slug, city, travel, districts=None):
+              url=f"https://{DOMAIN}/{cat}/{slug}/"
+              h1=f"Безвоздушная покраска {cat_gen} в {city}"
+              desc=f"Безвоздушная покраска {cat_gen} в {city}. Airless-технология, гарантия 5 лет. {travel}. ☎ {PHONE}"[:160]
+              dist=""
+              if districts:
+                  dist=f'<h2>Районы {city}</h2><ul>'+''.join(f'<li>{d}</li>' for d in districts)+'</ul>'
+              sc=schemas(cat,cat_gen,city,url)
+              return f"""<!DOCTYPE html>
+          <html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>{h1} | YarkiDom</title><meta name="description" content="{desc}">
+          <link rel="canonical" href="{url}"><script type="application/ld+json">{sc}</script>
+          <style>{CSS}</style></head><body><div class="container">
+          <nav><a href="https://yarkidom.ru">← YarkiDom.ru</a> | <a href="https://{DOMAIN}/">Все услуги</a> | <a href="https://{DOMAIN}/{cat}/">{cat_name.capitalize()}</a></nav>
+          <h1>{h1}</h1>
+          <p>Бригада базируется на севере Москвы. До {city} — {travel}. Бесплатный замер в день обращения.</p>
+          <a href="tel:{PHONE_CLEAN}" class="cta">☎ {PHONE} — Позвонить</a>
+          {dist}{TIPS[cat]}
+          <h2>Цены в {city}</h2>{prices_html(cat)}
+          <p><em>Точная стоимость после бесплатного замера. Выезд в {city} бесплатно.</em></p>
+          <h2>Частые вопросы</h2>{faq_html(cat)}
+          <h2>Оставить заявку</h2>
+          <form onsubmit="event.preventDefault();alert('Заявка принята! Перезвоним в течение 30 минут.')">
+          <input type="text" placeholder="Ваше имя" required><input type="tel" placeholder="Телефон" required>
+          <button type="submit">Отправить заявку</button></form>
+          <p>Телефон: <a href="tel:{PHONE_CLEAN}">{PHONE}</a></p>
+          </div></body></html>"""
+
+          def make_small(slug, title, cities):
+              url=f"https://{DOMAIN}/pokraska/{slug}/"
+              return f"""<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Покраска в {title} | YarkiDom</title>
+          <meta name="description" content="Безвоздушная покраска в {cities}. ☎ {PHONE}">
+          <link rel="canonical" href="{url}"><style>body{{font-family:Arial,sans-serif;background:#0d0d0d;color:#e0e0e0;padding:20px;max-width:900px;margin:0 auto}}h1{{color:#f0c040}}a{{color:#f0c040}}.cta{{display:inline-block;background:#f0c040;color:#000;padding:12px 24px;font-weight:700;border-radius:6px;text-decoration:none;margin:10px 0}}p{{color:#bbb;margin:0 0 12px}}</style>
+          </head><body><p><a href="https://{DOMAIN}/">← Все города</a></p>
+          <h1>Безвоздушная покраска в {title}</h1>
+          <p>Работаем в {cities}. Все виды: стены, фасады, потолки, крыши, деревянные дома.</p>
+          <a href="tel:{PHONE_CLEAN}" class="cta">☎ {PHONE}</a>
+          <p>Телефон: <a href="tel:{PHONE_CLEAN}">{PHONE}</a></p></body></html>"""
+
+          urls=[f"https://{DOMAIN}/"]
+          total=0
+          for cat,cat_name,cat_gen in CATEGORIES:
+              for slug,city,travel,dist in LARGE:
+                  p=f"{cat}/{slug}"; os.makedirs(p,exist_ok=True)
+                  open(f"{p}/index.html","w").write(make_page(cat,cat_name,cat_gen,slug,city,travel,dist))
+                  urls.append(f"https://{DOMAIN}/{p}/"); total+=1
+              for slug,city,travel in MEDIUM:
+                  p=f"{cat}/{slug}"; os.makedirs(p,exist_ok=True)
+                  open(f"{p}/index.html","w").write(make_page(cat,cat_name,cat_gen,slug,city,travel))
+                  urls.append(f"https://{DOMAIN}/{p}/"); total+=1
+
+          for slug,title,cities in SMALL:
+              p=f"pokraska/{slug}"; os.makedirs(p,exist_ok=True)
+              open(f"{p}/index.html","w").write(make_small(slug,title,cities))
+              urls.append(f"https://{DOMAIN}/{p}/"); total+=1
+
+          # index.html
+          cats=''.join(f'<li><a href="https://{DOMAIN}/{s}/">{n.capitalize()}</a></li>' for s,n,_ in CATEGORIES)
+          open("index.html","w").write(f"""<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Безвоздушная покраска МО | YarkiDom</title>
+          <meta name="description" content="YarkiDom — безвоздушная покраска в Московской области. ☎ {PHONE}">
+          <style>body{{font-family:Arial,sans-serif;background:#0d0d0d;color:#e0e0e0;padding:20px;max-width:960px;margin:0 auto}}h1{{color:#f0c040}}a{{color:#f0c040}}.cta{{display:inline-block;background:#f0c040;color:#000;padding:14px 28px;font-weight:700;border-radius:6px;text-decoration:none;margin:10px 0}}ul{{margin:15px 0 15px 20px}}li{{margin:6px 0}}</style>
+          </head><body><h1>Безвоздушная покраска в Московской области</h1>
+          <p>YarkiDom — Airless-покраска по всей МО. База: север Москвы (Дмитровское шоссе).</p>
+          <a href="tel:{PHONE_CLEAN}" class="cta">☎ {PHONE}</a>
+          <h2>Услуги</h2><ul>{cats}</ul><p><a href="https://yarkidom.ru">← Основной сайт YarkiDom.ru</a></p>
+          </body></html>""")
+
+          # sitemap.xml
+          sm=''.join(f'  <url><loc>{u}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n' for u in urls)
+          open("sitemap.xml","w").write(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{sm}</urlset>')
+
+          # robots.txt
+          open("robots.txt","w").write(f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
+
+          # CNAME
+          open("CNAME","w").write(DOMAIN)
+
+          print(f"Generated {total} pages, {len(urls)} URLs total")
+          PYEOF
+      - name: Commit and push
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add .
+          git commit -m "Generate 289 SEO pages for seo.yarkidom.ru" || echo "Nothing to commit"
+          git push
